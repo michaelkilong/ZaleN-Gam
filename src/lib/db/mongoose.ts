@@ -17,6 +17,10 @@ if (!cached) {
 }
 
 async function connectDB() {
+  if (!cached) {
+    cached = { conn: null, promise: null };
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
