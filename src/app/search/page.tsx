@@ -18,6 +18,7 @@ interface ArticleCardData {
   author?: { name: string };
   publishedAt?: Date;
   views?: number;
+  tags?: string[];
 }
 
 // Raw API response shape
@@ -75,6 +76,7 @@ export default function SearchPage() {
             : undefined,
           publishedAt: article.publishedAt ? new Date(article.publishedAt) : undefined,
           views: article.views,
+          tags: article.tags,
         }));
 
         const filtered = transformed.filter((article) =>
