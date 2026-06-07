@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import connectDB from '@/lib/db/mongoose';
 import { Article } from '@/lib/db/models/Article';
-import { Category } from '@/lib/db/models/Category';
 import { CommentSection } from '@/components/public/CommentSection';
 import { NewsletterForm } from '@/components/public/NewsletterForm';
 import { Badge } from '@/components/ui/badge';
@@ -11,36 +10,60 @@ import Image from 'next/image';
 
 export const revalidate = 60;
 
+interface ArticleDoc {
+  _id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  featuredImage?: string;
+  categoryId?: { _id: string; name: string; slug: string };
+  authorId?: { _id: string; name: string };
+  status: string;
+  publishedAt?: string;
+  views: number;
+  tags: string[];
+}
+
 async function getArticle(slug: string) {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const article = await Article.findOne({ slug, status: 'PUBLISHED' })
-    .populate('categoryId', 'name slug')
-    .populate('authorId', 'name')
-    .lean();
+    const article = await Article.findOne({ slug, status: 'PUBLISHED' })
+      .populate('categoryId', 'name slug')
+      .populate('authorId', 'name')
+      .lean() as unknown as ArticleDoc | null;
 
-  if (!article) return null;
+    if (!article) return null;
 
-  // Increment views
-  await Article.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+    await Article.updateOne({ _id: article._id }, { $inc: { views: 1 } });
 
-  return JSON.parse(JSON.stringify(article));
+    return JSON.parse(JSON.stringify(article));
+  } catch (error) {
+    console.error('Article fetch error:', error);
+    return null;
+  }
 }
 
 async function getRelatedArticles(categoryId: string, currentSlug: string) {
-  await connectDB();
-  const articles = await Article.find({
-    status: 'PUBLISHED',
-    categoryId,
-    slug: { $ne: currentSlug },
-  })
-    .populate('categoryId', 'name slug')
-    .populate('authorId', 'name')
-    .sort({ publishedAt: -1 })
-    .limit(3)
-    .lean();
+  try {
+    await connectDB();
+    const articles = await Article.find({
+      status: 'PUBLISHED',
+      categoryId,
+      slug: { $ne: currentSlug },
+    })
+      .populate('categoryId', 'name slug')
+      .populate('authorId', 'name')
+      .sort({ publishedAt: -1 })
+      .limit(3)
+      .lean();
 
-  return JSON.parse(JSON.stringify(articles));
+    return JSON.parse(JSON.stringify(articles));
+  } catch (error) {
+    console.error('Related articles fetch error:', error);
+    return [];
+  }
 }
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
@@ -50,14 +73,15 @@ export default async function ArticlePage({ params }: { params: { slug: string }
     notFound();
   }
 
-  const relatedArticles = await getRelatedArticles(article.categoryId._id, params.slug);
+  const relatedArticles = await getRelatedArticles(
+    article.categoryId?._id || '',
+    params.slug
+  );
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
         <article className="lg:col-span-2">
-          {/* Header */}
           <header className="mb-8">
             {article.categoryId && (
               <a href={`/category/${article.categoryId.slug}`}>
@@ -83,7 +107,6 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             </div>
           </header>
 
-          {/* Featured Image */}
           {article.featuredImage && (
             <div className="relative aspect-video mb-8 rounded-lg overflow-hidden">
               <Image
@@ -96,13 +119,11 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             </div>
           )}
 
-          {/* Article Content */}
           <div
             className="article-content max-w-none"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
-          {/* Tags */}
           {article.tags && article.tags.length > 0 && (
             <div className="mt-8 flex flex-wrap gap-2">
               {article.tags.map((tag: string) => (
@@ -113,13 +134,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             </div>
           )}
 
-          {/* Comments */}
           <CommentSection articleSlug={params.slug} articleTitle={article.title} />
         </article>
 
-        {/* Sidebar */}
         <aside className="space-y-8">
-          {/* Related Articles */}
           {relatedArticles.length > 0 && (
             <div>
               <h3 className="font-semibold mb-4">Related Articles</h3>

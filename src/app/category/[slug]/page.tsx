@@ -8,32 +8,44 @@ export const revalidate = 60;
 
 const ARTICLES_PER_PAGE = 12;
 
+interface CategoryDoc {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
 async function getCategoryData(slug: string, page: number = 1) {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const category = await Category.findOne({ slug }).lean();
-  if (!category) return null;
+    const category = await Category.findOne({ slug }).lean() as unknown as CategoryDoc | null;
+    if (!category) return null;
 
-  const skip = (page - 1) * ARTICLES_PER_PAGE;
+    const skip = (page - 1) * ARTICLES_PER_PAGE;
 
-  const [articles, total] = await Promise.all([
-    Article.find({ status: 'PUBLISHED', categoryId: category._id })
-      .populate('categoryId', 'name slug')
-      .populate('authorId', 'name')
-      .sort({ publishedAt: -1 })
-      .skip(skip)
-      .limit(ARTICLES_PER_PAGE)
-      .lean(),
-    Article.countDocuments({ status: 'PUBLISHED', categoryId: category._id }),
-  ]);
+    const [articles, total] = await Promise.all([
+      Article.find({ status: 'PUBLISHED', categoryId: category._id })
+        .populate('categoryId', 'name slug')
+        .populate('authorId', 'name')
+        .sort({ publishedAt: -1 })
+        .skip(skip)
+        .limit(ARTICLES_PER_PAGE)
+        .lean(),
+      Article.countDocuments({ status: 'PUBLISHED', categoryId: category._id }),
+    ]);
 
-  return {
-    category: JSON.parse(JSON.stringify(category)),
-    articles: JSON.parse(JSON.stringify(articles)),
-    total,
-    totalPages: Math.ceil(total / ARTICLES_PER_PAGE),
-    currentPage: page,
-  };
+    return {
+      category: JSON.parse(JSON.stringify(category)),
+      articles: JSON.parse(JSON.stringify(articles)),
+      total,
+      totalPages: Math.ceil(total / ARTICLES_PER_PAGE),
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error('Category fetch error:', error);
+    return null;
+  }
 }
 
 export default async function CategoryPage({
@@ -76,7 +88,6 @@ export default async function CategoryPage({
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex justify-center gap-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
