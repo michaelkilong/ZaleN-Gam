@@ -5,8 +5,8 @@ import { Category } from '@/lib/db/models/Category';
 import { getSession } from '@/lib/session';
 import { SystemLog } from '@/lib/db/models/SystemLog';
 import { getClientIP } from '@/lib/security/rate-limiter';
+import { sanitizeHTML } from '@/lib/security/sanitizer';
 import slugify from 'slugify';
-import DOMPurify from 'isomorphic-dompurify';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,11 +26,9 @@ export async function GET(request: NextRequest) {
 
     const query: any = {};
 
-    // Role-based filtering
     if (session.staffUser.role === 'AUTHOR') {
       query.authorId = session.staffUser.id;
     } else if (session.staffUser.role === 'EDITOR') {
-      // Editor sees own articles + submitted articles
       if (status === 'SUBMITTED') {
         query.status = 'SUBMITTED';
       } else {
@@ -63,10 +61,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Get articles error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -80,35 +75,23 @@ export async function POST(request: NextRequest) {
     const { title, content, excerpt, categoryId, featuredImage, tags, status } = await request.json();
 
     if (!title || !content || !excerpt || !categoryId) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     await connectDB();
 
-    // Check if category exists
     const category = await Category.findById(categoryId);
     if (!category) {
-      return NextResponse.json(
-        { error: 'Category not found' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Category not found' }, { status: 400 });
     }
 
-    // Generate slug
     let slug = slugify(title, { lower: true, strict: true });
     const existing = await Article.findOne({ slug });
     if (existing) {
       slug = `${slug}-${Date.now()}`;
     }
 
-    // Sanitize content
-    const sanitizedContent = DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'a', 'img', 'figure', 'figcaption', 'div', 'span'],
-      ALLOWED_ATTR: ['href', 'title', 'alt', 'src', 'width', 'height', 'class', 'id', 'target', 'rel'],
-    });
+    const sanitizedContent = sanitizeHTML(content);
 
     const articleData: any = {
       title,
@@ -122,12 +105,10 @@ export async function POST(request: NextRequest) {
       status: status || 'DRAFT',
     };
 
-    // Authors can only create drafts
     if (session.staffUser.role === 'AUTHOR') {
       articleData.status = 'DRAFT';
     }
 
-    // Editors and above can publish directly
     if (status === 'PUBLISHED' && ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(session.staffUser.role)) {
       articleData.publishedAt = new Date();
     }
@@ -138,7 +119,6 @@ export async function POST(request: NextRequest) {
 
     const article = await Article.create(articleData);
 
-    // Log action
     const ip = getClientIP(request);
     await SystemLog.create({
       action: 'ARTICLE_CREATE',
@@ -151,9 +131,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ article }, { status: 201 });
   } catch (error) {
     console.error('Create article error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
