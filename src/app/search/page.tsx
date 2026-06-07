@@ -7,14 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, AlertCircle } from 'lucide-react';
 
-interface Article {
+// Shape that ArticleCard expects
+interface ArticleCardData {
+  _id?: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  featuredImage?: string;
+  category?: { name: string; slug: string };
+  author?: { name: string };
+  publishedAt?: Date;
+  views?: number;
+}
+
+// Raw API response shape
+interface ApiArticle {
   _id: string;
   title: string;
   slug: string;
   excerpt: string;
   featuredImage?: string;
-  categoryId?: { name: string; slug: string };
-  authorId?: { name: string };
+  categoryId?: { _id: string; name: string; slug: string };
+  authorId?: { _id: string; name: string };
   publishedAt?: string;
   views?: number;
   tags?: string[];
@@ -26,7 +40,7 @@ export default function SearchPage() {
 
   const [query, setQuery] = useState(initialQuery);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleCardData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,7 +58,26 @@ export default function SearchPage() {
       const response = await fetch('/api/staff/articles?status=PUBLISHED');
       if (response.ok) {
         const data = await response.json();
-        const filtered = data.articles.filter((article: Article) =>
+
+        // Transform API response to match ArticleCard expected shape
+        const apiArticles: ApiArticle[] = data.articles || [];
+        const transformed: ArticleCardData[] = apiArticles.map((article) => ({
+          _id: article._id,
+          title: article.title,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          featuredImage: article.featuredImage,
+          category: article.categoryId
+            ? { name: article.categoryId.name, slug: article.categoryId.slug }
+            : undefined,
+          author: article.authorId
+            ? { name: article.authorId.name }
+            : undefined,
+          publishedAt: article.publishedAt ? new Date(article.publishedAt) : undefined,
+          views: article.views,
+        }));
+
+        const filtered = transformed.filter((article) =>
           article.title.toLowerCase().includes(q.toLowerCase()) ||
           article.excerpt.toLowerCase().includes(q.toLowerCase()) ||
           article.tags?.some((tag: string) => tag.toLowerCase().includes(q.toLowerCase()))
