@@ -1,5 +1,8 @@
 export async function verifyRecaptcha(token: string): Promise<boolean> {
-  if (!token) return false;
+  // Skip if not configured (development / no keys yet)
+  if (!process.env.RECAPTCHA_SECRET_KEY || !token) {
+    return true;
+  }
 
   try {
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
