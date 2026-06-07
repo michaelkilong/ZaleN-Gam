@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Readers collection - users can only access their own profile
+    match /readers/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
+    // Comments collection
+    match /comments/{commentId} {
+      // Anyone can read approved comments
+      allow read: if resource.data.isApproved == true || 
+                    (request.auth != null && request.auth.uid == resource.data.authorUid);
+      // Authenticated users can create comments (pending approval)
+      allow create: if request.auth != null && 
+                       request.auth.uid == request.resource.data.authorUid &&
+                       request.resource.data.isApproved == false;
+      // No direct updates/deletes from client - only via admin API
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Notifications collection - only recipient can read their own
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.recipientUid;
+      allow create: if false; // Only server-side
+      allow update: if request.auth != null && request.auth.uid == resource.data.recipientUid;
+      allow delete: if false;
+    }
+  }
+}
