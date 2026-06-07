@@ -17,6 +17,7 @@ interface Article {
   authorId?: { name: string };
   publishedAt?: string;
   views?: number;
+  tags?: string[];
 }
 
 export default function SearchPage() {
@@ -40,8 +41,6 @@ export default function SearchPage() {
     setError('');
 
     try {
-      // Client-side search by fetching all published articles and filtering
-      // In production, you'd implement a proper search API endpoint
       const response = await fetch('/api/staff/articles?status=PUBLISHED');
       if (response.ok) {
         const data = await response.json();
