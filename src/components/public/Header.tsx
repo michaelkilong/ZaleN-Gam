@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { ThemeToggle } from './ThemeToggle';
 import { SearchBar } from './SearchBar';
-import { Menu, X, Bell, User, LogOut, Shield } from 'lucide-react';
+import { Menu, X, Bell, User, LogOut } from 'lucide-react';
 import { auth } from '@/lib/firebase/client';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,11 @@ export function Header() {
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -36,7 +41,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
               <span className="text-primary">ZaleN</span>
@@ -44,7 +48,6 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
@@ -57,12 +60,11 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Right Section */}
           <div className="flex items-center gap-4">
             <SearchBar />
             <ThemeToggle />
 
-            {user ? (
+            {mounted && user ? (
               <div className="hidden md:flex items-center gap-3">
                 <Link href="/dashboard" className="relative">
                   <Bell className="h-5 w-5" />
@@ -79,7 +81,7 @@ export function Header() {
                   <LogOut className="h-5 w-5" />
                 </button>
               </div>
-            ) : (
+            ) : mounted ? (
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/login">
                   <button className="text-sm font-medium">Sign In</button>
@@ -90,9 +92,8 @@ export function Header() {
                   </button>
                 </Link>
               </div>
-            )}
+            ) : null}
 
-            {/* Mobile Menu Button */}
             <button
               className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -102,7 +103,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t py-4">
             <nav className="flex flex-col gap-3">
@@ -116,17 +116,17 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              {user ? (
+              {mounted && user ? (
                 <>
                   <Link href="/dashboard" className="text-sm font-medium">Dashboard</Link>
                   <button onClick={handleLogout} className="text-sm font-medium text-left">Sign Out</button>
                 </>
-              ) : (
+              ) : mounted ? (
                 <>
                   <Link href="/login" className="text-sm font-medium">Sign In</Link>
                   <Link href="/register" className="text-sm font-medium">Get Started</Link>
                 </>
-              )}
+              ) : null}
             </nav>
           </div>
         )}

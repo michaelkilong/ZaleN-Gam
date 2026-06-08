@@ -3,6 +3,8 @@ import connectDB from '@/lib/db/mongoose';
 import { SystemLog } from '@/lib/db/models/SystemLog';
 import { getSession } from '@/lib/session';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
