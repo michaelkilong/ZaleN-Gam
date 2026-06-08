@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { StaffLoginForm } from '@/components/dashboard/StaffLoginForm';
@@ -24,7 +25,7 @@ interface StaffUser {
   mustChangePassword: boolean;
 }
 
-export default function ControlRoomPage() {
+function DashboardContent() {
   const [user, setUser] = useState<StaffUser | null>(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -140,5 +141,13 @@ export default function ControlRoomPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ControlRoomPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
