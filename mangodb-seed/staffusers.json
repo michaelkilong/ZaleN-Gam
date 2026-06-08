@@ -1,0 +1,70 @@
+[
+  {
+    "_id": {
+      "$oid": "648000000000000000000001"
+    },
+    "name": "Super Admin",
+    "email": "admin@zalen-gam.com",
+    "passwordHash": "$2b$12$Dfg/nWGBZKbNEoOauwkBuuAYvuSB0boGgiptgWAIfrelIBEszRmuK",
+    "role": "SUPER_ADMIN",
+    "isActive": true,
+    "mustChangePassword": false,
+    "createdAt": {
+      "$date": "2024-01-01T00:00:00Z"
+    },
+    "lastLoginAt": {
+      "$date": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000002"
+    },
+    "name": "Demo Admin",
+    "email": "admin@demo.com",
+    "passwordHash": "$2b$12$Dfg/nWGBZKbNEoOauwkBuuAYvuSB0boGgiptgWAIfrelIBEszRmuK",
+    "role": "ADMIN",
+    "isActive": true,
+    "mustChangePassword": false,
+    "createdBy": {
+      "$oid": "648000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000003"
+    },
+    "name": "Demo Editor",
+    "email": "editor@demo.com",
+    "passwordHash": "$2b$12$X1hcQ0O0wsi0S2O.o6pf6OOEtvrNREMCZI5VmMPWVtSa5rBxnZpHW",
+    "role": "EDITOR",
+    "isActive": true,
+    "mustChangePassword": false,
+    "createdBy": {
+      "$oid": "648000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000004"
+    },
+    "name": "Demo Author",
+    "email": "author@demo.com",
+    "passwordHash": "$2b$12$m8O5PxPlnGM2h6bxxjv8KedXwZr0Td2DHEHoh6FsP6.c7OK6Kh..q",
+    "role": "AUTHOR",
+    "isActive": true,
+    "mustChangePassword": false,
+    "createdBy": {
+      "$oid": "648000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2024-01-01T00:00:00Z"
+    }
+  }
+]

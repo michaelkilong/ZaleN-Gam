@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase/admin';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 503 });
+    }
+
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

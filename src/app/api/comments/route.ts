@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { rateLimit, getClientIP } from '@/lib/security/rate-limiter';
 import { checkSpam } from '@/lib/security/spam-detection';
 import { sanitizeText } from '@/lib/security/sanitizer';
@@ -7,7 +7,10 @@ import { verifyRecaptcha } from '@/lib/security/recaptcha';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting: 10 comments per minute per IP
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 503 });
+    }
+
     const ip = getClientIP(request);
     const rateLimitResult = await rateLimit(`comment:${ip}`, 10, 60);
     if (!rateLimitResult.allowed) {
@@ -20,7 +23,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { articleId, articleTitle, authorUid, authorName, authorEmail, content, parentCommentId, recaptchaToken, honeypot, formLoadTime } = body;
 
-    // reCAPTCHA verification
     if (recaptchaToken) {
       const isValid = await verifyRecaptcha(recaptchaToken);
       if (!isValid) {
@@ -28,7 +30,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Spam detection
     const spamCheck = checkSpam(content || '', honeypot, formLoadTime);
     if (spamCheck.isSpam) {
       return NextResponse.json(
@@ -59,7 +60,6 @@ export async function POST(request: NextRequest) {
       ipAddress: ip,
     });
 
-    // If it's a reply, notify parent comment author
     if (parentCommentId) {
       const parentDoc = await adminDb.collection('comments').doc(parentCommentId).get();
       if (parentDoc.exists) {
@@ -94,6 +94,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 503 });
+    }
+
     const { searchParams } = new URL(request.url);
     const articleId = searchParams.get('articleId');
 

@@ -1,0 +1,23 @@
+[
+  {
+    "_id": {
+      "$oid": "648000000000000000000020"
+    },
+    "key": "site_name",
+    "value": "ZaleN-Gam"
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000021"
+    },
+    "key": "site_description",
+    "value": "Your trusted source for breaking news and analysis"
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000022"
+    },
+    "key": "contact_email",
+    "value": "contact@zalen-gam.com"
+  }
+]

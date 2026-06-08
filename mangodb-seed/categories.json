@@ -1,0 +1,42 @@
+[
+  {
+    "_id": {
+      "$oid": "648000000000000000000010"
+    },
+    "name": "Politics",
+    "slug": "politics",
+    "description": "Political news and analysis"
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000011"
+    },
+    "name": "Technology",
+    "slug": "technology",
+    "description": "Tech news, reviews, and innovation"
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000012"
+    },
+    "name": "Sports",
+    "slug": "sports",
+    "description": "Sports coverage and highlights"
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000013"
+    },
+    "name": "Entertainment",
+    "slug": "entertainment",
+    "description": "Movies, TV, music, and culture"
+  },
+  {
+    "_id": {
+      "$oid": "648000000000000000000014"
+    },
+    "name": "Business",
+    "slug": "business",
+    "description": "Business and financial news"
+  }
+]

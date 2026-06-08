@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/session';
 import { adminDb } from '@/lib/firebase/admin';
+import { getSession } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 503 });
+    }
+
     const session = await getSession();
     if (!session.staffUser || !['SUPER_ADMIN', 'ADMIN'].includes(session.staffUser.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -37,6 +41,10 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 503 });
+    }
+
     const session = await getSession();
     if (!session.staffUser || !['SUPER_ADMIN', 'ADMIN'].includes(session.staffUser.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

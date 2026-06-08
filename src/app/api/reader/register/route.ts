@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase/admin';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { rateLimit, getClientIP } from '@/lib/security/rate-limiter';
 import { isValidEmail } from '@/lib/security/email-validator';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 503 });
+    }
+
     const ip = getClientIP(request);
     const rateLimitResult = await rateLimit(`reader_register:${ip}`, 5, 60);
     if (!rateLimitResult.allowed) {
@@ -39,14 +41,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user in Firebase Auth
     const userRecord = await adminAuth.createUser({
       email,
       password,
       displayName: name,
     });
 
-    // Create reader profile in Firestore
     await adminDb.collection('readers').doc(userRecord.uid).set({
       email,
       name,
