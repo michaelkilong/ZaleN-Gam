@@ -66,8 +66,14 @@ async function getRelatedArticles(categoryId: string, currentSlug: string) {
   }
 }
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = await getArticle(params.slug);
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const article = await getArticle(slug);
 
   if (!article) {
     notFound();
@@ -75,7 +81,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
   const relatedArticles = await getRelatedArticles(
     article.categoryId?._id || '',
-    params.slug
+    slug
   );
 
   return (
@@ -134,7 +140,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             </div>
           )}
 
-          <CommentSection articleSlug={params.slug} articleTitle={article.title} />
+          <CommentSection articleSlug={slug} articleTitle={article.title} />
         </article>
 
         <aside className="space-y-8">
